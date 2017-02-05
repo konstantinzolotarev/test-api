@@ -1,0 +1,39 @@
+{
+  "name": "test-api",
+  "version": "1.0.0",
+  "description": "Sample Application",
+  "main": "index.js",
+  "scripts": {
+    "test": "eslint . && NODE_ENV=test mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/konstantinzolotarev/test-api.git"
+  },
+  "author": "Konstantin Zolotarev <konstantin.zolotarev@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/konstantinzolotarev/test-api/issues"
+  },
+  "homepage": "https://github.com/konstantinzolotarev/test-api#readme",
+  "dependencies": {
+    "body-parser": "^1.16.0",
+    "config": "^1.25.1",
+    "cors": "^2.8.1",
+    "express": "^4.14.1",
+    "knex": "^0.12.6",
+    "lodash": "^4.17.4",
+    "pg": "^6.1.2"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "chance": "^1.0.4",
+    "eslint": "^3.15.0",
+    "eslint-config-trails": "^2.0.6",
+    "mocha": "^3.2.0",
+    "supertest": "^3.0.0"
+  },
+  "eslintConfig": {
+    "extends": "trails"
+  }
+}

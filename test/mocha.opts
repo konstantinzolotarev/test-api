@@ -1,0 +1,10 @@
+--reporter spec
+--recursive
+--full-trace
+--no-exit
+--check-leaks
+--timeout 5000
+--globals app
+
+test/setup.js
+test/**/*.test.js
