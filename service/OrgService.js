@@ -53,6 +53,27 @@ module.exports = {
   },
 
   /**
+   * Will load organization from DB
+   * @param {String} name
+   * @return {Promise}
+   */
+  _loadOrg (name) {
+    if (!_.isString(name) || !name.length)
+      return Promise.reject(new Error('Wrong name passed'))
+
+    return knex(ORG_TABLE)
+      .select()
+      .where('name', name)
+      .then((list) => {
+        if (!_.isArray(list) || !list.length)
+          return null
+
+        // No need to check length because name is unique
+        return list[0]
+      })
+  },
+
+  /**
    * Will store set of data from input
    * @param {Object} org
    * @param {Object} [parent]
@@ -67,9 +88,16 @@ module.exports = {
 
     const newLevel = (_.isObject(parent) && _.isNumber(parent.level)) ? parent.level + 1 : 0
     return this
-      ._insertOrg({
-        org_name: org.org_name,
-        level: newLevel
+      ._loadOrg(org.org_name)
+      .then((record) => {
+        if (_.isObject(record))
+          return record
+
+        return this
+          ._insertOrg({
+            org_name: org.org_name,
+            level: newLevel
+          })
       })
       .then((record) => {
         if (!_.isObject(parent) || !parent.id)
@@ -85,7 +113,7 @@ module.exports = {
 
         return Promise.map(org.daughters, (child) => {
           return this.store(child, record)
-        }, { concurrency: 100 })
+        }, { concurrency: 1 })
       })
       .then((result) => {
         if (!_.isArray(result))

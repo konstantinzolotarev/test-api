@@ -5,15 +5,14 @@ const chance = new require('chance')() // eslint-disable-line
 const OrgService = require('../../service/OrgService')
 const knex = require('../../lib/knex')
 
-/*eslint no-underscore-dangle: ["error", { "allow": ["_insertOrg", "_insertRef"] }]*/
+/*eslint no-underscore-dangle: ['error', { 'allow': ['_insertOrg', '_insertRef', '_loadOrg'] }]*/
 
 describe('OrgService :: ', () => {
 
   describe('_insertOrg() :: ', () => {
 
     after(() => {
-      return knex('organizations')
-        .del()
+      return knex('organizations').del()
     })
 
     it('should exist', () => {
@@ -42,9 +41,7 @@ describe('OrgService :: ', () => {
 
     it('insert new org', () => {
       return OrgService
-        ._insertOrg({
-          org_name: chance.hash()
-        })
+        ._insertOrg({org_name: chance.hash()})
         .then((rec) => {
           expect(rec).to.be.an('object')
           expect(rec.id).to.be.ok
@@ -58,28 +55,21 @@ describe('OrgService :: ', () => {
     let orgs
 
     before(() => {
-      return knex('organizations')
-        .insert([
-          {
-            name: chance.hash()
-          },
-          {
-            name: chance.hash()
-          }
-        ])
-        .returning(['id', 'name', 'level'])
-        .then((recs) => {
-          expect(recs).to.be.an('array')
-            .and.to.have.lengthOf(2)
+      return knex('organizations').insert([
+        {
+          name: chance.hash()
+        }, {
+          name: chance.hash()
+        }
+      ]).returning(['id', 'name', 'level']).then((recs) => {
+        expect(recs).to.be.an('array').and.to.have.lengthOf(2)
 
-          orgs = recs
-        })
+        orgs = recs
+      })
     })
 
     after(() => {
-      return knex('refs')
-        .del()
-        .then(() => knex('organizations').del())
+      return knex('refs').del().then(() => knex('organizations').del())
     })
 
     it('should exist', () => {
@@ -134,11 +124,71 @@ describe('OrgService :: ', () => {
     })
   })
 
+  describe('_loadOrg() :: ', () => {
+
+    let org
+
+    before(() => {
+      return OrgService
+        ._insertOrg({org_name: chance.hash()})
+        .then((rec) => {
+          expect(rec).to.be.an('object')
+          expect(rec.id).to.be.ok
+
+          org = rec
+        })
+    })
+
+    after(() => {
+      return knex('organizations').del()
+    })
+
+    it('should exist', () => {
+      expect(OrgService._loadOrg).to.be.a('function')
+    })
+
+    it('reject without name', () => {
+      return OrgService
+        ._loadOrg()
+        .then(() => Promise.reject())
+        .catch((err) => {
+          expect(err).to.be.an('error')
+            .and.to.have.property('message', 'Wrong name passed')
+        })
+    })
+
+    it('reject on empty', () => {
+      return OrgService
+        ._loadOrg('')
+        .then(() => Promise.reject())
+        .catch((err) => {
+          expect(err).to.be.an('error')
+            .and.to.have.property('message', 'Wrong name passed')
+        })
+    })
+
+    it('load record', () => {
+      return OrgService
+        ._loadOrg(org.name)
+        .then((rec) => {
+          expect(rec).to.be.an('object')
+          expect(rec.id).to.be.ok
+        })
+    })
+
+    it('load empty for non existing', () => {
+      return OrgService
+        ._loadOrg(chance.hash())
+        .then((rec) => {
+          expect(rec).to.be.null
+        })
+    })
+  })
+
   describe('store() :: ', () => {
 
     afterEach(() => {
-      return knex('refs')
-        .del()
+      return knex('refs').del()
         .then(() => knex('organizations').del())
     })
 
@@ -168,9 +218,7 @@ describe('OrgService :: ', () => {
 
     it('should store a new org', () => {
       return OrgService
-        .store({
-          org_name: chance.hash()
-        })
+        .store({org_name: chance.hash()})
         .then((recs) => {
           expect(recs).to.be.an('array')
             .and.to.have.length.above(0)
@@ -183,8 +231,7 @@ describe('OrgService :: ', () => {
         daughters: [
           {
             org_name: chance.hash()
-          },
-          {
+          }, {
             org_name: chance.hash()
           }
         ]
@@ -194,12 +241,10 @@ describe('OrgService :: ', () => {
         .then((recs) => {
           expect(recs).to.be.an('array')
 
-          return knex('organizations')
-            .select()
+          return knex('organizations').select()
         })
         .then((list) => {
-          expect(list).to.be.an('array')
-            .and.to.have.lengthOf(3)
+          expect(list).to.be.an('array').and.to.have.lengthOf(3)
         })
     })
 
@@ -212,8 +257,7 @@ describe('OrgService :: ', () => {
             daughters: [
               {
                 org_name: chance.hash()
-              },
-              {
+              }, {
                 org_name: chance.hash()
               }
             ]
@@ -225,15 +269,77 @@ describe('OrgService :: ', () => {
         .then((recs) => {
           expect(recs).to.be.an('array')
 
-          return knex('organizations')
-            .select()
+          return knex('organizations').select()
+        })
+        .then((list) => {
+          expect(list).to.be.an('array')
+            .and.to.have.lengthOf(4)
+
+          return knex('refs').select()
+        })
+        .then((refs) => {
+          expect(refs).to.be.an('array')
+            .and.to.have.lengthOf(3)
+        })
+    })
+
+    it('store construction', () => {
+      const data = {
+        org_name: 'Paradise Island',
+        daughters: [
+          {
+            org_name: 'Banana tree',
+            daughters: [
+              {
+                org_name: 'Yellow Banana'
+              }, {
+                org_name: 'Brown Banana'
+              }, {
+                org_name: 'Black Banana'
+              }
+            ]
+          }, {
+            org_name: 'Big banana tree',
+            daughters: [
+              {
+                org_name: 'Yellow Banana'
+              }, {
+                org_name: 'Brown Banana'
+              }, {
+                org_name: 'Green Banana'
+              }, {
+                org_name: 'Black Banana',
+                daughters: [
+                  {
+                    org_name: 'Phoneutria Spider'
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+
+      return OrgService
+        .store(data)
+        .then((recs) => {
+          expect(recs).to.be.an('array')
+
+          return knex('organizations').select()
         })
         .then((list) => {
           console.log('==========================')
           console.log(list)
           console.log('==========================')
-          expect(list).to.be.an('array')
-            .and.to.have.lengthOf(4)
+          expect(list).to.be.an('array').and.to.have.length.above(4)
+
+          return knex('refs').select()
+        })
+        .then((refs) => {
+          console.log('==========================')
+          console.log(refs)
+          console.log('==========================')
+          expect(refs).to.be.an('array').and.to.have.length.above(3)
         })
     })
   })
