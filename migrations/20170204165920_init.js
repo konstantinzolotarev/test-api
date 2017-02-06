@@ -5,7 +5,7 @@ exports.up = function(knex, Promise) {
     .createTable('organizations', function(table) {
       table.increments()
       table.string('name').unique()
-      table.integer('level')
+      table.integer('level').defaultTo(0)
     })
     .then(() => {
       return knex.schema.createTable('refs', function(table) {
