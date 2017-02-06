@@ -71,6 +71,8 @@ describe('OrgService :: ', () => {
         .then((recs) => {
           expect(recs).to.be.an('array')
             .and.to.have.lengthOf(2)
+
+          orgs = recs
         })
     })
 
@@ -119,9 +121,6 @@ describe('OrgService :: ', () => {
         ._insertRef(99, 100)
         .then(() => Promise.reject())
         .catch((err) => {
-          console.log('==========================')
-          console.log(err)
-          console.log('==========================')
           expect(err).to.be.ok
         })
     })

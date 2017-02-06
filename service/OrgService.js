@@ -26,6 +26,7 @@ module.exports = {
         level: org.level || 0
       })
       .returning(['id', 'name', 'level'])
+      .then((recs) => recs[0])
   },
 
   /**
