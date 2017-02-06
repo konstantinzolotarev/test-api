@@ -198,11 +198,42 @@ describe('OrgService :: ', () => {
             .select()
         })
         .then((list) => {
+          expect(list).to.be.an('array')
+            .and.to.have.lengthOf(3)
+        })
+    })
+
+    it('store list', () => {
+      const data = {
+        org_name: chance.hash(),
+        daughters: [
+          {
+            org_name: chance.hash(),
+            daughters: [
+              {
+                org_name: chance.hash()
+              },
+              {
+                org_name: chance.hash()
+              }
+            ]
+          }
+        ]
+      }
+      return OrgService
+        .store(data)
+        .then((recs) => {
+          expect(recs).to.be.an('array')
+
+          return knex('organizations')
+            .select()
+        })
+        .then((list) => {
           console.log('==========================')
           console.log(list)
           console.log('==========================')
           expect(list).to.be.an('array')
-            .and.to.have.lengthOf(3)
+            .and.to.have.lengthOf(4)
         })
     })
   })

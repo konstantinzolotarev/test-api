@@ -84,9 +84,6 @@ module.exports = {
           return record
 
         return Promise.map(org.daughters, (child) => {
-          console.log('==========================')
-          console.log(record)
-          console.log('==========================')
           return this.store(child, record)
         }, { concurrency: 100 })
       })
