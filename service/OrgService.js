@@ -25,6 +25,7 @@ module.exports = {
         name: org.org_name,
         level: org.level || 0
       })
+      .returning(['id', 'name', 'level'])
   },
 
   /**
@@ -46,6 +47,7 @@ module.exports = {
         parent: parentId,
         child: childId
       })
+      .returning(['parent', 'child'])
   },
 
   /**

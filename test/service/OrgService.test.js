@@ -55,6 +55,25 @@ describe('OrgService :: ', () => {
 
   describe('_insertRef() :: ', () => {
 
+    let orgs
+
+    before(() => {
+      return knex('organizations')
+        .insert([
+          {
+            name: chance.hash()
+          },
+          {
+            name: chance.hash()
+          }
+        ])
+        .returning(['id', 'name', 'level'])
+        .then((recs) => {
+          expect(recs).to.be.an('array')
+            .and.to.have.lengthOf(2)
+        })
+    })
+
     after(() => {
       return knex('refs')
         .del()
@@ -107,7 +126,13 @@ describe('OrgService :: ', () => {
         })
     })
 
-    it('add new record')
+    it('add new record', () => {
+      return OrgService
+        ._insertRef(orgs[0].id, orgs[1].id)
+        .then((rec) => {
+          expect(rec).to.be.ok
+        })
+    })
   })
 
   describe('store() :: ', () => {
