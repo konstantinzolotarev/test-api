@@ -328,17 +328,11 @@ describe('OrgService :: ', () => {
           return knex('organizations').select()
         })
         .then((list) => {
-          console.log('==========================')
-          console.log(list)
-          console.log('==========================')
           expect(list).to.be.an('array').and.to.have.length.above(4)
 
           return knex('refs').select()
         })
         .then((refs) => {
-          console.log('==========================')
-          console.log(refs)
-          console.log('==========================')
           expect(refs).to.be.an('array').and.to.have.length.above(3)
         })
     })
