@@ -21,6 +21,9 @@ app.get('/', (req, res) => {
 })
 
 app.post('/org', (req, res) => {
+  if (!_.isObject(req.body) || !req.body.org_name)
+    return res.status(400).json({ message: 'Wrong input prarameters' })
+
   res.json({})
 })
 

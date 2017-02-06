@@ -9,6 +9,46 @@ const REF_TABLE = 'refs'
 module.exports = {
 
   /**
+   * Insert organization
+   * @private
+   * @param {Object} org
+   * @param {String} org.org_name
+   * @param {Number} [org.level]
+   * @return {Promise}
+   */
+  _insertOrg (org) {
+    if (!_.isObject(org) || !org.org_name)
+      return Promise.reject(new Error('Wrong org parameter passed'))
+
+    return knex(ORG_TABLE)
+      .insert({
+        name: org.org_name,
+        level: org.level || 0
+      })
+  },
+
+  /**
+   * Insert reference between parent and child
+   * @private
+   * @param {Number} parentId
+   * @param {Number} childId
+   * @return {Promise}
+   */
+  _insertRef (parentId, childId) {
+    if (!_.isFinite(parentId) || !_.isFinite(childId))
+      return Promise.reject(new Error('Input parameters are invalid'))
+
+    if (parentId == childId)
+      return Promise.reject(new Error('Parameters could not be equal'))
+
+    return knex(REF_TABLE)
+      .insert({
+        parent: parentId,
+        child: childId
+      })
+  },
+
+  /**
    * Will store set of data from input
    * @param {Object} org
    * @param {Object} [parent]
@@ -26,15 +66,22 @@ module.exports = {
         name: org.org_name,
         level: (_.has(parent, 'level') ? parent.level : 0)
       })
-    if (_.isArray(org.parents) && org.parents.length > 0) {
-      // TODO: store to parents
-      // load parent
-      // get his level
-      // store current
-    }
+      .then((record) => {
+        if (!_.isObject(parent) || !parent.id)
+          return record
 
-    if (_.isArray(org.daughters) && org.daughters.length > 0) {
-      // TODO: store daughters
-    }
-  }
+        return this
+          ._insertRef(parent.id, record.id)
+          .then(() => record)
+      })
+      .then((record) => {
+        if (!_.isArray(org.daughters) || !org.daughters.length)
+          return record
+
+        return Promise.map(org.daughters, (child) => {
+          return this.store(child, record)
+        })
+      })
+  },
+
 }
