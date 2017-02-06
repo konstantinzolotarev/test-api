@@ -4,7 +4,8 @@
   "description": "Sample Application",
   "main": "index.js",
   "scripts": {
-    "test": "eslint . && NODE_ENV=test mocha"
+    "test": "eslint . && NODE_ENV=test mocha",
+    "mocha": "NODE_ENV=test mocha"
   },
   "repository": {
     "type": "git",

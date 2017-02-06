@@ -136,6 +136,12 @@ describe('OrgService :: ', () => {
 
   describe('store() :: ', () => {
 
+    afterEach(() => {
+      return knex('refs')
+        .del()
+        .then(() => knex('organizations').del())
+    })
+
     it('should exist', () => {
       expect(OrgService.store).to.be.a('function')
     })
@@ -157,6 +163,46 @@ describe('OrgService :: ', () => {
         .catch((err) => {
           expect(err).to.be.an('error')
             .and.to.have.property('message', 'Wrong organization passed')
+        })
+    })
+
+    it('should store a new org', () => {
+      return OrgService
+        .store({
+          org_name: chance.hash()
+        })
+        .then((recs) => {
+          expect(recs).to.be.an('array')
+            .and.to.have.length.above(0)
+        })
+    })
+
+    it('should store with child', () => {
+      const data = {
+        org_name: chance.hash(),
+        daughters: [
+          {
+            org_name: chance.hash()
+          },
+          {
+            org_name: chance.hash()
+          }
+        ]
+      }
+      return OrgService
+        .store(data)
+        .then((recs) => {
+          expect(recs).to.be.an('array')
+
+          return knex('organizations')
+            .select()
+        })
+        .then((list) => {
+          console.log('==========================')
+          console.log(list)
+          console.log('==========================')
+          expect(list).to.be.an('array')
+            .and.to.have.lengthOf(3)
         })
     })
   })

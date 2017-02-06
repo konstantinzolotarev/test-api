@@ -2,6 +2,7 @@
 
 const knex = require('../lib/knex')
 const _ = require('lodash')
+const Promise = require('bluebird')
 
 const ORG_TABLE = 'organizations'
 const REF_TABLE = 'refs'
@@ -64,10 +65,11 @@ module.exports = {
     if (!org.org_name)
       return Promise.reject(new Error('Wrong organization passed'))
 
-    return knex(ORG_TABLE)
-      .insert({
-        name: org.org_name,
-        level: (_.has(parent, 'level') ? parent.level : 0)
+    const newLevel = (_.isObject(parent) && _.isNumber(parent.level)) ? parent.level + 1 : 0
+    return this
+      ._insertOrg({
+        org_name: org.org_name,
+        level: newLevel
       })
       .then((record) => {
         if (!_.isObject(parent) || !parent.id)
@@ -82,8 +84,17 @@ module.exports = {
           return record
 
         return Promise.map(org.daughters, (child) => {
+          console.log('==========================')
+          console.log(record)
+          console.log('==========================')
           return this.store(child, record)
-        })
+        }, { concurrency: 100 })
+      })
+      .then((result) => {
+        if (!_.isArray(result))
+          return [ result ]
+
+        return result
       })
   },
 
