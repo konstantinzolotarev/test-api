@@ -126,11 +126,19 @@ module.exports = {
   /**
    * Load org by it's name with all parents/childs
    * @param {Object} org
+   * @param {Number} org.id
+   * @param {Number} org.level
+   * @param {String} org.name
+   * @param {Object} [pagination]
+   * @param {Number} [pagination.limit] limit of records pulled for 1 call
+   * @param {Number} [pagination.skip]
    * @return {Promise}
    */
-  load (org) {
+  load (org, pagination) {
     if (!_.isObject(org) || !org.id || !org.name || !org.level)
       return Promise.reject(new Error('Org is required parameter'))
+
+    pagination = pagination || {}
 
     const sql = `
     select distinct org.id, org.name as org_name,
@@ -146,6 +154,7 @@ module.exports = {
         select refs.parent from :ref_table: as refs where refs.child = :id or refs.parent = :id
       ) or ref.child = :id)
     order by org.name asc
+    offset :skip
     limit :limit
     `
     return knex
@@ -154,7 +163,8 @@ module.exports = {
         ref_table: REF_TABLE,
         id: org.id,
         level: org.level,
-        limit: 100
+        limit: pagination.limit || 100,
+        skip: pagination.skip || 0
       })
       .then((resp) => resp.rows || [])
   }

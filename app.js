@@ -42,6 +42,21 @@ app.get('/org/:name', (req, res) => {
   if (!req.params.name)
     return res.status(500).json({ error: 'Ooppps' })
 
+  // fix types
+  if (req.query.limit)
+    req.query.limit = Number(req.query.limit)
+
+  if (req.query.skip)
+    req.query.skip = Number(req.query.skip)
+
+  // Set max limit
+  if (_.isFinite(req.query.limit) && req.query.limit > 100)
+    req.query.limit = 100
+
+  const pagination = {
+    limit: _.isFinite(req.query.limit) ? req.query.limit : 100,
+    skip: _.isFinite(req.query.skip) ? req.query.skip : 0
+  }
   OrgService
     .loadOrg(req.params.name)
     .then((rec) => {
@@ -49,7 +64,7 @@ app.get('/org/:name', (req, res) => {
         return res.status(404).send()
 
       return OrgService
-        .load(rec)
+        .load(rec, pagination)
         .then((list) => {
           return list.map((org) => _.pick(org, ['org_name', 'relationship_type']))
         })

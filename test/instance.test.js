@@ -44,6 +44,7 @@ const clean = () => {
   return knex('refs').del()
     .then(() => knex('organizations').del())
 }
+
 describe('Instance test :: ', () => {
 
   before(clean)
@@ -79,6 +80,18 @@ describe('Instance test :: ', () => {
       .then((res) => {
         expect(res.body).to.be.an('array')
           .and.to.have.length.above(5)
+      })
+  })
+
+  it('should load correct amount', () => {
+    const limit = 3
+    return supertest(global.app)
+      .get('/org/' + 'Black Banana')
+      .query({ limit: limit })
+      .expect(200)
+      .then((res) => {
+        expect(res.body).to.be.an('array')
+          .and.to.have.lengthOf(limit)
       })
   })
 })
