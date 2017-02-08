@@ -57,7 +57,7 @@ module.exports = {
    * @param {String} name
    * @return {Promise}
    */
-  _loadOrg (name) {
+  loadOrg (name) {
     if (!_.isString(name) || !name.length)
       return Promise.reject(new Error('Wrong name passed'))
 
@@ -88,7 +88,7 @@ module.exports = {
 
     const newLevel = (_.isObject(parent) && _.isNumber(parent.level)) ? parent.level + 1 : 0
     return this
-      ._loadOrg(org.org_name)
+      .loadOrg(org.org_name)
       .then((record) => {
         if (_.isObject(record))
           return record
@@ -122,5 +122,41 @@ module.exports = {
         return result
       })
   },
+
+  /**
+   * Load org by it's name with all parents/childs
+   * @param {Object} org
+   * @return {Promise}
+   */
+  load (org) {
+    if (!_.isObject(org) || !org.id || !org.name || !org.level)
+      return Promise.reject(new Error('Org is required parameter'))
+
+    const sql = `
+    select distinct org.id, org.name as org_name,
+      case
+        when org.level > :level then 'daughter'
+        when org.level < :level then 'parent'
+        else 'sister'
+      end as relationship_type
+    from :org_table: as org
+    inner join :ref_table: as ref on org.id = ref.parent or org.id = ref.child
+    where org.id != :id and
+      (ref.parent in (
+        select refs.parent from :ref_table: as refs where refs.child = :id or refs.parent = :id
+      ) or ref.child = :id)
+    order by org.name asc
+    limit :limit
+    `
+    return knex
+      .raw(sql, {
+        org_table: ORG_TABLE,
+        ref_table: REF_TABLE,
+        id: org.id,
+        level: org.level,
+        limit: 100
+      })
+      .then((resp) => resp.rows || [])
+  }
 
 }

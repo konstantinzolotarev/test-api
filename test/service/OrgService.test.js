@@ -5,7 +5,7 @@ const chance = new require('chance')() // eslint-disable-line
 const OrgService = require('../../service/OrgService')
 const knex = require('../../lib/knex')
 
-/*eslint no-underscore-dangle: ['error', { 'allow': ['_insertOrg', '_insertRef', '_loadOrg'] }]*/
+/*eslint no-underscore-dangle: ['error', { 'allow': ['_insertOrg', '_insertRef'] }]*/
 
 describe('OrgService :: ', () => {
 
@@ -124,7 +124,7 @@ describe('OrgService :: ', () => {
     })
   })
 
-  describe('_loadOrg() :: ', () => {
+  describe('loadOrg() :: ', () => {
 
     let org
 
@@ -144,12 +144,12 @@ describe('OrgService :: ', () => {
     })
 
     it('should exist', () => {
-      expect(OrgService._loadOrg).to.be.a('function')
+      expect(OrgService.loadOrg).to.be.a('function')
     })
 
     it('reject without name', () => {
       return OrgService
-        ._loadOrg()
+        .loadOrg()
         .then(() => Promise.reject())
         .catch((err) => {
           expect(err).to.be.an('error')
@@ -159,7 +159,7 @@ describe('OrgService :: ', () => {
 
     it('reject on empty', () => {
       return OrgService
-        ._loadOrg('')
+        .loadOrg('')
         .then(() => Promise.reject())
         .catch((err) => {
           expect(err).to.be.an('error')
@@ -169,7 +169,7 @@ describe('OrgService :: ', () => {
 
     it('load record', () => {
       return OrgService
-        ._loadOrg(org.name)
+        .loadOrg(org.name)
         .then((rec) => {
           expect(rec).to.be.an('object')
           expect(rec.id).to.be.ok
@@ -178,7 +178,7 @@ describe('OrgService :: ', () => {
 
     it('load empty for non existing', () => {
       return OrgService
-        ._loadOrg(chance.hash())
+        .loadOrg(chance.hash())
         .then((rec) => {
           expect(rec).to.be.null
         })
@@ -337,4 +337,92 @@ describe('OrgService :: ', () => {
         })
     })
   })
+
+  describe('load() :: ', () => {
+
+    let org
+
+    before(() => {
+      const data = {
+        org_name: 'Paradise Island',
+        daughters: [
+          {
+            org_name: 'Banana tree',
+            daughters: [
+              {
+                org_name: 'Yellow Banana'
+              }, {
+                org_name: 'Brown Banana'
+              }, {
+                org_name: 'Black Banana'
+              }
+            ]
+          }, {
+            org_name: 'Big banana tree',
+            daughters: [
+              {
+                org_name: 'Yellow Banana'
+              }, {
+                org_name: 'Brown Banana'
+              }, {
+                org_name: 'Green Banana'
+              }, {
+                org_name: 'Black Banana',
+                daughters: [
+                  {
+                    org_name: 'Phoneutria Spider'
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+
+      return OrgService
+        .store(data)
+        .then((recs) => {
+          expect(recs).to.be.an('array')
+
+          return knex('organizations').select()
+        })
+        .then((list) => {
+          expect(list).to.be.an('array').and.to.have.length.above(4)
+
+          return knex('refs').select()
+        })
+        .then((refs) => {
+          expect(refs).to.be.an('array').and.to.have.length.above(3)
+          return knex('organizations')
+            .select()
+            .where('name', 'Black Banana')
+        })
+        .then((rec) => {
+          expect(rec).to.be.an('array')
+            .and.to.have.lengthOf(1)
+
+          org = rec[0]
+        })
+    })
+
+    after(() => {
+      return knex('refs').del()
+        .then(() => knex('organizations').del())
+    })
+
+    it('should exist', () => {
+      expect(OrgService.load).to.be.a('function')
+    })
+
+    it('load list', () => {
+      return OrgService
+        .load(org)
+        .then((list) => {
+          expect(list).to.be.an('array')
+            .and.to.have.lengthOf(6)
+        })
+    })
+  })
+
+
 })
